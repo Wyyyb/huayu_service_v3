@@ -1,9 +1,9 @@
 import json
 from openai import OpenAI
 
-# api_base = "http://80.251.213.24:8000/v1"
+# api_base = "http://80.251.213.24:9001/v1"
 api_base = "http://localhost:9001/v1"
-api_key = ""  # vLLM 默认不使用 API key，或设置 VLLM_API_KEY 后此处与之匹配
+api_key = "EMPTY"  # vLLM 默认不使用 API key，或设置 VLLM_API_KEY 后此处与之匹配
 
 client = OpenAI(api_key=api_key, base_url=api_base)
 

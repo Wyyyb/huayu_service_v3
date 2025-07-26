@@ -19,4 +19,4 @@ resp = client.chat.completions.create(
 )
 
 print("resp", resp)
-print(json.dumps(resp, indent=2, ensure_ascii=False))
+print(json.dumps(resp.dict(), indent=2, ensure_ascii=False))

@@ -11,10 +11,10 @@ resp = client.chat.completions.create(
     model="Qwen/Qwen3-8B",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "你好，请告诉我人工智能的未来发展方向。"}
+        {"role": "user", "content": "你好，请告诉我人工智能的未来发展方向。<think>\n\n</think>\n\n"}
     ],
     temperature=0.6,
-    max_tokens=150,
+    max_tokens=2048,
     extra_body={"top_k": 40}
 )
 

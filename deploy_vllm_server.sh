@@ -6,4 +6,5 @@ vllm serve Qwen/Qwen3-8B \
     --port 9001 \
     --gpu-memory-utilization 0.9 \
     --max-model-len 8192 \
+    --chat-template ./qwen3_nonthinking.jinja \
     --trust-remote-code

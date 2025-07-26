@@ -18,4 +18,5 @@ resp = client.chat.completions.create(
     extra_body={"top_k": 40}
 )
 
+print("resp", resp)
 print(json.dumps(resp, indent=2, ensure_ascii=False))

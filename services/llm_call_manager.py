@@ -17,14 +17,17 @@ def llm_single_call(prompt):
                 {"role": "user", "content": prompt}
             ],
             temperature=0.6,
-            max_tokens=8192,
+            max_tokens=32000,
             extra_body={"top_k": 40},
             timeout=60
         )
     except Exception as e:
         print("exception", e)
         return None
-    return resp.dict()["choices"][0]["message"]["content"]
+    content = resp.dict()["choices"][0]["message"]["content"]
+    if "</think>\n\n" in content:
+        content = content.split("</think>\n\n")[1]
+    return content
 
 
 

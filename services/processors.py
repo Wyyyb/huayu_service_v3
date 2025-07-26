@@ -8,14 +8,14 @@ class BaseProcessor(ABC):
     """处理器基类"""
     
     @abstractmethod
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """处理核心逻辑"""
         pass
 
 class BiddingNoticeProcessor(BaseProcessor):
     """招标公告产品服务处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """处理招标公告产品信息"""
         # TODO: 实现具体的招标公告产品解析逻辑
         result = {
@@ -38,7 +38,7 @@ class BiddingNoticeProcessor(BaseProcessor):
 class WinningNoticeProcessor(BaseProcessor):
     """中标公告产品服务处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """处理中标公告产品信息"""
         # TODO: 实现具体的中标公告产品解析逻辑
         result = {
@@ -69,7 +69,7 @@ class WinningNoticeProcessor(BaseProcessor):
 class IdExtractionProcessor(BaseProcessor):
     """编号提取服务处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """提取各种编号信息"""
         # TODO: 实现具体的编号提取逻辑
         result = {
@@ -94,7 +94,7 @@ class IdExtractionProcessor(BaseProcessor):
 class LocationTimeProcessor(BaseProcessor):
     """地区时间提取服务处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """提取地区和时间信息"""
         # TODO: 实现具体的地区时间提取逻辑
         result = {
@@ -116,7 +116,7 @@ class LocationTimeProcessor(BaseProcessor):
 class NoticeTypeClassificationProcessor(BaseProcessor):
     """公告类型分类处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """分类公告类型"""
         # TODO: 实现具体的公告类型分类逻辑
         result = {
@@ -135,7 +135,7 @@ class NoticeTypeClassificationProcessor(BaseProcessor):
 class PurchaseTypeClassificationProcessor(BaseProcessor):
     """采购类型分类处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """分类采购类型"""
         # TODO: 实现具体的采购类型分类逻辑
         result = {
@@ -154,7 +154,7 @@ class PurchaseTypeClassificationProcessor(BaseProcessor):
 class ContactInfoProcessor(BaseProcessor):
     """联系人信息解析处理器"""
     
-    def process(self, notice_id, content, extra_info):
+    def process(self, notice_id, content, extra_info=None):
         """解析联系人信息"""
         # TODO: 实现具体的联系人信息解析逻辑
         result = {
@@ -175,7 +175,7 @@ class ContactInfoProcessor(BaseProcessor):
 class MultimodalProcessor:
     """多模态服务处理器"""
     
-    def process_file(self, notice_id, file_data, file_type, extra_info):
+    def process_file(self, notice_id, file_data, file_type, extra_info=None):
         """处理单个文件"""
         if file_type == 'pdf':
             return self.process_pdf(notice_id, file_data, extra_info)
@@ -184,7 +184,7 @@ class MultimodalProcessor:
         else:
             raise ValueError(f"Unsupported file type: {file_type}")
     
-    def process_images(self, notice_id, file_data_list, extra_info):
+    def process_images(self, notice_id, file_data_list, extra_info=None):
         """处理多张图片"""
         # TODO: 实现具体的多图片OCR逻辑
         extracted_texts = []

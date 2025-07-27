@@ -1,5 +1,6 @@
 import json
 from openai import OpenAI
+import time
 
 
 api_base = "http://localhost:9001/v1"
@@ -9,6 +10,7 @@ client = OpenAI(api_key=api_key, base_url=api_base)
 
 
 def llm_single_call(prompt):
+    start_time = time.time()
     try:
         resp = client.chat.completions.create(
             model="Qwen/Qwen3-8B",
@@ -27,6 +29,7 @@ def llm_single_call(prompt):
     content = resp.dict()["choices"][0]["message"]["content"]
     if "</think>\n\n" in content:
         content = content.split("</think>\n\n")[1]
+    print("cost time:", time.time() - start_time)
     return content
 
 

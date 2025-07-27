@@ -1,21 +1,48 @@
 from services.prompt_manager import *
 from services.llm_call_manager import *
+import time
+import re
 
 
 def parse_bidding_product(input_text):
     prompt = get_prompt("bidding_product")
+    start_time = time.time()
     response = llm_single_call(prompt + "\n\n" + input_text)
     expected_headers = ["招标单位", "产品名称", "产品数量", "产品预算单价(元)", "预算总金额(元)", "最高限价(元)"]
-    result = parse_markdown_table(response, expected_headers)
-    return result
+    try:
+        result = parse_markdown_table(response, expected_headers)
+    except Exception as e:
+        print("exception in parse_markdown_table(response, expected_headers)", e)
+        print("llm original response", response)
+        result = None
+    return result, response, time.time() - start_time
 
 
 def parse_winning_product(input_text):
     prompt = get_prompt("winning_product")
+    start_time = time.time()
     response = llm_single_call(prompt + "\n\n" + input_text)
     expected_headers = ["招标单位", "供应商", "产品名称", "产品品牌", "产品型号", "产品数量", "产品单价(元)", "中标总价(元)"]
-    result = parse_markdown_table(response, expected_headers)
-    return result
+    try:
+        result = parse_markdown_table(response, expected_headers)
+    except Exception as e:
+        print("exception in parse_markdown_table(response, expected_headers)", e)
+        print("llm original response", response)
+        result = None
+    return result, response, time.time() - start_time
+
+
+def parse_other_info(input_text, service_type):
+    prompt = get_prompt(service_type)
+    start_time = time.time()
+    response = llm_single_call(prompt + "\n\n" + input_text)
+    try:
+        result = parse_response(response, service_type)
+    except Exception as e:
+        print("exception in parse_response(response, service_type)", e)
+        print("llm original response", response)
+        result = None
+    return result, response, time.time() - start_time
 
 
 def parse_markdown_table(markdown_table, expected_headers=None):
@@ -133,6 +160,151 @@ def parse_markdown_table(markdown_table, expected_headers=None):
         result.append(row_data)
 
     return result
+
+
+def parse_response(response_text, function_type):
+    if function_type == "code_extraction":
+        return parse_code_response(response_text)
+    elif function_type == "district_time":
+        return parse_district_response(response_text)
+    elif function_type == "bid_type":
+        return parse_bid_type(response_text)
+    elif function_type == "notice_type":
+        return parse_notice_type(response_text)
+    elif function_type == "contact_info":
+        return parse_contact_info(response_text)
+    else:
+        return None
+
+
+def parse_code_response(response_text):
+    """
+    解析 LLM 的回答，将“项目编号、招标编号、合同编号、采购计划编号、包号、标段号”等提取到字典中。
+
+    :param response_text: LLM 返回的文本（格式化为键值对）
+    :return: 包含提取信息的字典
+    """
+    # 定义要提取的字段
+    keys = ["项目编号", "招标编号", "合同编号", "采购编号", "采购计划编号", "意向编号",
+            "包号", "标段号", "订单号", "流水号"]
+    extracted_data = {}
+
+    # 遍历字段并使用正则表达式提取对应值
+    for key in keys:
+        pattern = rf"{key}\s*[:：]\s*(.*)"
+        match = re.search(pattern, response_text)
+        if match:
+            extracted_data[key] = match.group(1).strip()  # 提取并去掉多余空格
+        else:
+            extracted_data[key] = "无"  # 如果没找到，则标记为“无”
+
+    return extracted_data
+
+
+def parse_district_response(response_text):
+    """
+    解析 LLM 的回答，将“地区、发布时间、报名截止时间、获取招标文件开始时间、
+    获取招标文件截止时间、递交投标文件开始时间、递交投标文件截止时间、报价截止时间、开标时间”提取到字典中。
+
+    :param response_text: LLM 返回的文本（格式化为键值对）
+    :return: 包含提取信息的字典
+    """
+    # 定义要提取的字段
+    keys = [
+        "采购地区",
+        "发布时间",
+        "报名截止时间",
+        "获取招标文件开始时间",
+        "获取招标文件截止时间",
+        "递交投标文件开始时间",
+        "递交投标文件截止时间",
+        "报价截止时间",
+        "开标时间"
+    ]
+    extracted_data = {}
+
+    # 遍历字段并使用正则表达式提取对应值
+    for key in keys:
+        pattern = rf"{key}\s*[:：]\s*(.*)"
+        match = re.search(pattern, response_text)
+        if match:
+            extracted_data[key] = match.group(1).strip()  # 提取并去掉多余空格
+        else:
+            extracted_data[key] = "无"  # 如果没找到，则标记为“无”
+
+    return extracted_data
+
+
+def parse_notice_type(response_text):
+    """
+    将 LLM 的分类结果转换为标准化的公告类型。
+
+    :param response_text: LLM 返回的分类结果文本
+    :return: 公告类型字符串，如果无法分类则返回 '其他'
+    """
+    # 定义所有可能的公告类型
+    valid_categories = [
+        "招标", "结果", "中标", "成交", "废标", "流标", "终止",
+        "入围", "预告", "变更", "信息", "合同", "验收",
+        "违规", "预审", "其他"
+    ]
+
+    category = response_text.strip()
+    if category in valid_categories:
+        return {"公告类型": category}
+    else:
+        return {"公告类型": "其他"}
+
+
+def parse_bid_type(response_text):
+    """
+    将 LLM 的采购类型分类结果转换为标准化的采购类型。
+
+    :param response_text: LLM 返回的分类结果文本
+    :return: 采购类型字符串，如果无法分类则返回 '其他'
+    """
+    # 定义所有可能的采购类型
+    valid_categories = [
+        "公开招标", "竞争性磋商", "竞争性谈判", "询价", "单一来源",
+        "邀请招标", "协议竞价", "电子反拍", "网上询价", "网上竞价",
+        "协议采购", "批量采购", "定点采购", "定点服务", "电商直购"
+    ]
+
+    # 去掉多余的空格或换行符并验证分类结果
+    category = response_text.strip()
+    if category in valid_categories:
+        return {"采购类型": category}
+    else:
+        return {"采购类型": "其他"}  # 如果结果不在有效类别中，则返回“其他”
+
+
+def parse_contact_info(response_text):
+    """
+    解析 LLM 的返回结果，将联系人信息提取到一个列表中，每个联系人信息存储为一个字典。
+
+    :param response_text: LLM 返回的联系人信息文本
+    :return: 包含联系人信息的列表，每个元素为包含详细信息的字典
+    """
+    # 定义正则表达式模式，用于提取联系人信息块
+    contact_pattern = re.compile(
+        r"所属企业名称\s*[:：]\s*(.*?)\s*联系人名字\s*[:：]\s*(.*?)\s*联系电话\s*[:：]\s*(.*?)\s*账号类型\s*[:：]\s*(.*?)"
+    )
+
+    # 匹配所有联系人信息块
+    matches = contact_pattern.findall(response_text)
+    contact_list = []
+
+    # 遍历匹配结果，构建联系人字典
+    for match in matches:
+        contact_dict = {
+            "所属企业名称": match[0].strip() if match[0].strip() else "无",
+            "联系人名字": match[1].strip() if match[1].strip() else "无",
+            "联系电话": match[2].strip() if match[2].strip() else "无",
+            "账号类型": match[3].strip() if match[3].strip() else "无",
+        }
+        contact_list.append(contact_dict)
+
+    return contact_list
 
 
 # 使用示例

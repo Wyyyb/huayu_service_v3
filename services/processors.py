@@ -3,6 +3,20 @@
 
 import base64
 from abc import ABC, abstractmethod
+from services.notice_parser import *
+import pytz
+import datetime
+
+
+def get_beijing_time_pytz():
+    # 获取UTC时间
+    utc_now = datetime.datetime.now(pytz.utc)
+    # 转换为北京时间
+    beijing_tz = pytz.timezone('Asia/Shanghai')
+    beijing_now = utc_now.astimezone(beijing_tz)
+    beijing_now = beijing_now.strftime("%Y-%m-%d %H:%M:%S")
+    return beijing_now
+
 
 class BaseProcessor(ABC):
     """处理器基类"""
@@ -18,20 +32,16 @@ class BiddingNoticeProcessor(BaseProcessor):
     def process(self, notice_id, content, extra_info=None):
         """处理招标公告产品信息"""
         # TODO: 实现具体的招标公告产品解析逻辑
+        data, ori_response, cost_time = parse_bidding_product(content)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
             "service_type": "bidding_product",
-            "processed_content": content,
-            "bidding_products": [
-                {
-                    "招标单位": "待实现",
-                    "产品": "待实现",
-                    "数量": "待实现",
-                    "预算单价": "待实现",
-                    "预算金额": "待实现",
-                    "最高限价": "待实现"
-                }
-            ]
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
@@ -41,53 +51,35 @@ class WinningNoticeProcessor(BaseProcessor):
     def process(self, notice_id, content, extra_info=None):
         """处理中标公告产品信息"""
         # TODO: 实现具体的中标公告产品解析逻辑
+        data, ori_response, cost_time = parse_winning_product(content)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
             "service_type": "winning_product",
-            "processed_content": content,
-            "winning_products": [
-                {
-                    "中标单位": "待实现",
-                    "产品名称": "待实现",
-                    "标的名称": "待实现",
-                    "标项名称": "待实现",
-                    "产品品牌": "待实现",
-                    "产品型号": "待实现",
-                    "生产厂家": "待实现",
-                    "产品数量": "待实现",
-                    "产品单价": "待实现",
-                    "中标金额": "待实现",
-                    "品目名称": "待实现",
-                    "招标单位": "待实现",
-                    "招标金额": "待实现",
-                    "预算金额": "待实现"
-                }
-            ]
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
 class IdExtractionProcessor(BaseProcessor):
     """编号提取服务处理器"""
-    
+
     def process(self, notice_id, content, extra_info=None):
         """提取各种编号信息"""
-        # TODO: 实现具体的编号提取逻辑
+        service = "code_extraction"
+        data, ori_response, cost_time = parse_other_info(content, service)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
-            "service_type": "code_extraction",
-            "processed_content": content,
-            "codes": {
-                "项目编号": "待实现",
-                "招标编号": "待实现",
-                "合同编号": "待实现",
-                "采购编号": "待实现",
-                "采购计划编号": "待实现",
-                "意向编号": "待实现",
-                "包号": "待实现",
-                "标段号": "待实现",
-                "订单号": "待实现",
-                "流水号": "待实现"
-            }
+            "service_type": service,
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
@@ -96,20 +88,17 @@ class LocationTimeProcessor(BaseProcessor):
     
     def process(self, notice_id, content, extra_info=None):
         """提取地区和时间信息"""
-        # TODO: 实现具体的地区时间提取逻辑
+        service = "district_time"
+        data, ori_response, cost_time = parse_other_info(content, service)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
-            "service_type": "district_time",
-            "processed_content": content,
-            "location_time": {
-                "地区": "待实现",
-                "省份": "待实现",
-                "城市": "待实现",
-                "区县": "待实现",
-                "发布时间": "待实现",
-                "截止时间": "待实现",
-                "开标时间": "待实现"
-            }
+            "service_type": service,
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
@@ -118,17 +107,17 @@ class NoticeTypeClassificationProcessor(BaseProcessor):
     
     def process(self, notice_id, content, extra_info=None):
         """分类公告类型"""
-        # TODO: 实现具体的公告类型分类逻辑
+        service = "notice_type"
+        data, ori_response, cost_time = parse_other_info(content, service)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
-            "service_type": "notice_type",
-            "processed_content": content,
-            "notice_type": {
-                "公告类型": "待实现",
-                "公告子类型": "待实现",
-                "公告级别": "待实现",
-                "紧急程度": "待实现"
-            }
+            "service_type": service,
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
@@ -137,17 +126,17 @@ class PurchaseTypeClassificationProcessor(BaseProcessor):
     
     def process(self, notice_id, content, extra_info=None):
         """分类采购类型"""
-        # TODO: 实现具体的采购类型分类逻辑
+        service = "bid_type"
+        data, ori_response, cost_time = parse_other_info(content, service)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
-            "service_type": "bid_type",
-            "processed_content": content,
-            "purchase_type": {
-                "采购类型": "待实现",
-                "采购方式": "待实现",
-                "采购品目": "待实现",
-                "采购预算": "待实现"
-            }
+            "service_type": service,
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 
@@ -156,19 +145,17 @@ class ContactInfoProcessor(BaseProcessor):
     
     def process(self, notice_id, content, extra_info=None):
         """解析联系人信息"""
-        # TODO: 实现具体的联系人信息解析逻辑
+        service = "contact_info"
+        data, ori_response, cost_time = parse_other_info(content, service)
+        request_time = get_beijing_time_pytz()
         result = {
             "notice_id": notice_id,
-            "service_type": "contact_info",
-            "processed_content": content,
-            "contacts": [
-                {
-                    "所属企业名称": "待实现",
-                    "联系人名字": "待实现",
-                    "联系电话": "待实现",
-                    "账号类型": "待实现"
-                }
-            ]
+            "service_type": service,
+            "input_text": content,
+            "result": data,
+            "original_response": ori_response,
+            "cost_time": cost_time,
+            "request_time": request_time,
         }
         return result
 

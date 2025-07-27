@@ -8,7 +8,11 @@ BiddingNoticeProcessor = BiddingNoticeProcessor()
 
 def single_test_file(input_file_path, output_file_path):
     input_text = ""
-    with open(input_file_path, "r", encoding="utf-8") as f:
+    if os.path.exists(output_file_path):
+        print("output file exists", output_file_path)
+        return
+    print("processing file", input_file_path)
+    with open(input_file_path, "r") as f:
         for line in f:
             input_text += line + "\n"
     # result = BiddingNoticeProcessor.process("notice_id", input_text)
